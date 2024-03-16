@@ -84,6 +84,7 @@ contract AdaptativePoolHook is BaseHook {
         returns (bytes4) 
     {
         require(!initialized);
+        return BaseHook.beforeInitialize.selector;
     }
 
     // only once
@@ -103,6 +104,7 @@ contract AdaptativePoolHook is BaseHook {
         poolKey = _poolKey;
         POOL_ID = _poolKey.toId();
         initialized = true;
+        return BaseHook.afterInitialize.selector;
     }
 
     function beforeSwap(
@@ -284,13 +286,13 @@ contract AdaptativePoolHook is BaseHook {
 
     function getHookPermissions() public pure override returns (Hooks.Permissions memory hp){
         return Hooks.Permissions(
-            false, // beforeInitialize
-            false, // afterInitialize true
+            true, // beforeInitialize TRUE
+            true, // afterInitialize true
             false, // beforeAddLiquidity
             false, // afterAddLiquidity
             false, // beforeRemoveLiquidity
             false, // afterRemoveLiquidity
-            false, // beforeSwap true
+            true, // beforeSwap true
             true, // afterSwap true
             false, // beforeDonate
             false // afterDonate

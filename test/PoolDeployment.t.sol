@@ -17,11 +17,24 @@ import "v4-core/types/PoolId.sol";
 import "src/AdaptativePoolHook.sol";
 
 
+address constant HOOK_DEPLOYMENT_ADDRESS = address(uint160(
+        Hooks.BEFORE_INITIALIZE_FLAG |
+        Hooks.AFTER_INITIALIZE_FLAG |
+        Hooks.BEFORE_SWAP_FLAG | 
+        Hooks.AFTER_SWAP_FLAG 
+        ));
+
+uint24 constant DYNAMIC_FEE_FLAG = 24;
 
 contract Implementation is AdaptativePoolHook {
+    event SuccesfulImplementationCreation();
 
-    constructor(IPoolManager _poolManager, AdaptativePoolHook addressToEtch) AdaptativePoolHook(poolManager,50,3600,100,100_00,1_000,100,25){
-        Hooks.isValidHookAddress(addressToEtch, 24);
+    constructor(
+        IPoolManager _poolManager,
+        AdaptativePoolHook addressToEtch
+    ) AdaptativePoolHook(_poolManager,50,3600,100,100_00,1_000,100,25){
+        Hooks.isValidHookAddress(addressToEtch, DYNAMIC_FEE_FLAG);
+        emit SuccesfulImplementationCreation();
     }
 
 }
@@ -30,7 +43,7 @@ contract Implementation is AdaptativePoolHook {
 
 contract PoolDeployment is Test {
 
-    AdaptativePoolHook hook = AdaptativePoolHook(address(uint160(Hooks.AFTER_SWAP_FLAG)));
+    AdaptativePoolHook hook = AdaptativePoolHook(HOOK_DEPLOYMENT_ADDRESS);
     PoolManager manager;
     PoolKey poolKey;
 
@@ -47,6 +60,7 @@ contract PoolDeployment is Test {
         Implementation impl = new Implementation(manager, hook);
         (, bytes32[] memory writes) = vm.accesses(address(impl));
         vm.etch(address(hook), address(impl).code);
+        vm.label(HOOK_DEPLOYMENT_ADDRESS, "AdaptativePoolHook");
 
         unchecked {
             for (uint256 i = 0; i < writes.length; i++) {
@@ -72,6 +86,9 @@ contract PoolDeployment is Test {
 
     }
 
+    function _addLiquidity() internal{
+
+    }
 
     function test_swap() public {
         string memory poronga = manager.swap();
