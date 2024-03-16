@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import "src/mock/MockToken.sol";
 
 // Import necessary contract for deployment
-import "./ExtendedPoolManager.sol";
+import "src/ExtendedPoolManager.sol";
 import {CurrencyLibrary, Currency} from "v4-core/types/Currency.sol";
 import {Hooks} from "v4-core/libraries/Hooks.sol";
 import {IHooks} from "v4-core/interfaces/IHooks.sol";

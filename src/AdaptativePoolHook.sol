@@ -6,7 +6,7 @@ import "v4-core/types/PoolId.sol";
 import "v4-core/types/PoolKey.sol";
 import "v4-core/types/BalanceDelta.sol";
 import "v4-core/interfaces/IPoolManager.sol";
-import "../test/interfaces/IExtendedPoolManager.sol";
+import "./interfaces/IExtendedPoolManager.sol";
 
 import "v4-core/libraries/Pool.sol";
 import "v4-core/libraries/Hooks.sol";
