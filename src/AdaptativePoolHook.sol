@@ -9,8 +9,7 @@ import "v4-core/interfaces/IPoolManager.sol";
 import "v4-core/libraries/Pool.sol";
 import "v4-core/libraries/Hooks.sol";
 
-import "openzeppelin-contracts/Ownable2Step.sol";
-
+import "openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 
 /// @title Adaptive Pool Hook Contract
 /// @dev This contract extends BaseHook to implement adaptive fee logic based on liquidity and volume dynamics.
