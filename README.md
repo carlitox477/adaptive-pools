@@ -11,7 +11,7 @@ AdaptivePools helps liquidity providers to improve their rewards and traders to 
 Uniswap V4 introduces hooks within their Liquidity Pools, therefore allowing us to interact with the contract based on constantly changing situations as liquidy supply, price market volatily and high or low trade demand. 
 
 For it, we modify pool fee within a settable range to make 2 things:
-- Under low trade demand, we can reduce the pool fee so best routing mechanisms like 1inch or Matcha will find our pool and the LP get more trades
+- Under low trade demand, we can reduce the pool fee so best trade routing mechanisms like 1inch or Matcha will find our pool and the LP get more trades
 - Under high trade demand, we can increase the pool fee as trades are gonna happen due to the momentum of the market, therefore, increasing liquidity providers rewards
 
 Additionally, this incentivize huge liquidity, this liquidity provided creates consistent trades where price impact is minimum, therefore, making healthier the user trades.
