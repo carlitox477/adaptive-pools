@@ -6,6 +6,8 @@ import "v4-core/types/PoolId.sol";
 import "v4-core/types/PoolKey.sol";
 import "v4-core/types/BalanceDelta.sol";
 import "v4-core/interfaces/IPoolManager.sol";
+import "../test/interfaces/IExtendedPoolManager.sol";
+
 import "v4-core/libraries/Pool.sol";
 import "v4-core/libraries/Hooks.sol";
 // import "v4-core/PoolManager.sol";
@@ -15,7 +17,6 @@ error UnsafeCasting();
 contract AdaptativePoolHook is BaseHook {
     using PoolIdLibrary for PoolKey;
 
-
     uint24 constant ONE_HUNDREAD_PERCENT = 100;
     uint24 immutable AVG_LIQUIDITY_VOLUME_THESHOLD_PERCENT;
     uint24 immutable EPOCHS_TO_TRACK;
@@ -24,8 +25,9 @@ contract AdaptativePoolHook is BaseHook {
     uint24 immutable MAX_FEE;
     uint24 immutable NORMAL_FEE;
     uint24 immutable EPOCH_DELTA_FEE;
-    PoolId immutable POOL_ID;
+    bool initialized;
     
+    PoolId POOL_ID;
     PoolKey poolKey;
     
     uint128 finalizedEpochs;
@@ -47,8 +49,7 @@ contract AdaptativePoolHook is BaseHook {
         uint24 maxFee,
         uint24 normalFee,
         uint24 epochDeltaFee,
-        uint24 avgLiquidityVolumeThreshold,
-        PoolKey memory _poolKey
+        uint24 avgLiquidityVolumeThreshold
     ) BaseHook(_poolManager){
         require(epochDuration != 0);
         require(minFee < maxFee);
@@ -69,9 +70,39 @@ contract AdaptativePoolHook is BaseHook {
         EPOCH_DELTA_FEE = epochDeltaFee;
         AVG_LIQUIDITY_VOLUME_THESHOLD_PERCENT = avgLiquidityVolumeThreshold;
         lastEpochsVolume = new uint256[](epochsToTrack);
+    }
+
+    function beforeInitialize(
+        address,
+        PoolKey calldata,
+        uint160,
+        bytes calldata
+    ) 
+        external
+        poolManagerOnly()
+        override
+        returns (bytes4) 
+    {
+        require(!initialized);
+    }
+
+    // only once
+    function afterInitialize(
+        address,
+        PoolKey calldata _poolKey,
+        uint160,
+        int24,
+        bytes calldata
+    )
+        external
+        poolManagerOnly()
+        override
+        returns (bytes4)
+    {
+        require(!initialized);
         poolKey = _poolKey;
         POOL_ID = _poolKey.toId();
-
+        initialized = true;
     }
 
     function beforeSwap(
@@ -154,8 +185,8 @@ contract AdaptativePoolHook is BaseHook {
         uint256 feeGrowthPerLiquityUnit0,
         uint256 feeGrowthPerLiquityUnit1
     ){
-        feeGrowthPerLiquityUnit0 = poolManager.getPoolFeeGrowth(POOL_ID, true);
-        feeGrowthPerLiquityUnit1 = poolManager.getPoolFeeGrowth(POOL_ID, false);
+        feeGrowthPerLiquityUnit0 = IExtendedPoolManager(address(poolManager)).getPoolFeeGrowth(POOL_ID, true);
+        feeGrowthPerLiquityUnit1 = IExtendedPoolManager(address(poolManager)).getPoolFeeGrowth(POOL_ID, false);
 
     }
 

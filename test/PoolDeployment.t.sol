@@ -6,26 +6,28 @@ import "forge-std/Test.sol";
 import "src/mock/MockToken.sol";
 
 // Import necessary contract for deployment
-import "v4-core/PoolManager.sol";
+import "./ExtendedPoolManager.sol";
 import {CurrencyLibrary, Currency} from "v4-core/types/Currency.sol";
 import {Hooks} from "v4-core/libraries/Hooks.sol";
 import {IHooks} from "v4-core/interfaces/IHooks.sol";
 import "v4-core/interfaces/IPoolManager.sol";
 import "v4-core/types/PoolKey.sol";
 import "v4-core/libraries/TickMath.sol";
-import "v4-core/types/PoolKey.sol";
+import "v4-core/types/PoolId.sol";
 import "src/AdaptativePoolHook.sol";
 
 
 
 contract PoolDeployment is Test {
-
+    using PoolIdLibrary for PoolKey;
     ERC20 token0;
     ERC20 token1;
 
-    IPoolManager poolmanager;
+    IExtendedPoolManager poolmanager;
     
-    AdaptativePoolHook superdynamicfeeshook;
+    AdaptativePoolHook adaptativePoolHook;
+    PoolKey poolKey;
+    PoolId poolId;
 
     function setUp() public {
 
@@ -34,7 +36,12 @@ contract PoolDeployment is Test {
         token1 = new MockToken("usdc", "USDC");
 
         // Create PoolManager
-        poolmanager = new PoolManager(500000);
+        poolmanager = new ExtendedPoolManager(500000);
+
+        // First create hook
+        _setupHook();
+
+        
 
         // Initialize PoolManager
         // Make sure tokens are in order
@@ -42,7 +49,7 @@ contract PoolDeployment is Test {
             (token0, token1) = (token1, token0);
         }
         // Create Pool Key data
-        PoolKey memory key = PoolKey(
+        poolKey = PoolKey(
             // The lower currency of the pool, sorted numerically
             Currency.wrap(address(token0)), 
             // The higher currency of the pool, sorted numerically
@@ -52,14 +59,41 @@ contract PoolDeployment is Test {
             // Ticks that involve positions must be a multiple of tick spacing
             int24(60),
             // The hooks of the pool
-            IHooks(address(0))
+            IHooks(address(adaptativePoolHook))
         );
+
+        poolId = poolKey.toId();
+
         // Test intermediate value 
         uint160 sqrtPriceX96 = (TickMath.MAX_SQRT_RATIO + TickMath.MIN_SQRT_RATIO) / 2;
         
-        keyid = poolmanager.initialize(key, sqrtPriceX96, "");
+        poolmanager.initialize(poolKey, sqrtPriceX96, "");
+        
     }
 
+    function _setupHook() internal{
+        // HOOK creation
+       adaptativePoolHook = new AdaptativePoolHook (
+            // Pool Manager Contract
+            poolmanager,
+            // epochsToTrack
+            50,
+            // epochDuration (1h in seconds)
+            3600,
+            // minFee
+            100,
+            // maxFee
+            100_00,
+            // normalFee
+            1_000,
+            //epochDeltaFee
+            100,
+            // avgLiquidityVolumeThreshold
+            25
+       );
+    }
+
+/*
     function test_hookdeploy() public {
 
         // Pool Key Initialization
@@ -109,7 +143,7 @@ contract PoolDeployment is Test {
         key
        );
     }
-
+*/
 
     function test_token() public view {
         assertEq(token0.totalSupply(), 1000000 * 10**18);
