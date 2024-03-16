@@ -14,14 +14,27 @@ import "v4-core/interfaces/IPoolManager.sol";
 import "v4-core/types/PoolKey.sol";
 import "v4-core/libraries/TickMath.sol";
 import "v4-core/types/PoolId.sol";
-import "src/AdaptivePoolHook.sol";
+import "src/AdaptativePoolHook.sol";
 
 
+address constant HOOK_DEPLOYMENT_ADDRESS = address(uint160(
+        Hooks.BEFORE_INITIALIZE_FLAG |
+        Hooks.AFTER_INITIALIZE_FLAG |
+        Hooks.BEFORE_SWAP_FLAG | 
+        Hooks.AFTER_SWAP_FLAG 
+        ));
 
-contract Implementation is AdaptivePoolHook {
+uint24 constant DYNAMIC_FEE_FLAG = 24;
 
-    constructor(IPoolManager _poolManager, AdaptivePoolHook addressToEtch) AdaptivePoolHook(poolManager,50,3600,100,100_00,1_000,100,25){
-        Hooks.isValidHookAddress(addressToEtch, 24);
+contract Implementation is AdaptativePoolHook {
+    event SuccesfulImplementationCreation();
+
+    constructor(
+        IPoolManager _poolManager,
+        AdaptativePoolHook addressToEtch
+    ) AdaptativePoolHook(_poolManager,50,3600,100,100_00,1_000,100,25){
+        Hooks.isValidHookAddress(addressToEtch, DYNAMIC_FEE_FLAG);
+        emit SuccesfulImplementationCreation();
     }
 
 }
@@ -30,14 +43,14 @@ contract Implementation is AdaptivePoolHook {
 
 contract PoolDeployment is Test {
 
-    AdaptivePoolHook hook = AdaptivePoolHook(address(uint160(Hooks.AFTER_SWAP_FLAG)));
+    AdaptativePoolHook hook = AdaptativePoolHook(HOOK_DEPLOYMENT_ADDRESS);
     PoolManager manager;
     PoolKey poolKey;
 
     IERC20 token0;
     IERC20 token1;
 
-    int24 stateTick;
+
     function setUp() public {
         token0 = new MockToken("weth", "WETH");
         token1 = new MockToken("usdc", "USDC");
@@ -47,6 +60,7 @@ contract PoolDeployment is Test {
         Implementation impl = new Implementation(manager, hook);
         (, bytes32[] memory writes) = vm.accesses(address(impl));
         vm.etch(address(hook), address(impl).code);
+        vm.label(HOOK_DEPLOYMENT_ADDRESS, "AdaptativePoolHook");
 
         unchecked {
             for (uint256 i = 0; i < writes.length; i++) {
@@ -68,25 +82,19 @@ contract PoolDeployment is Test {
 
         //PoolId poolId = PoolId.wrap(keccak256(abi.encode(poolKey)));
         uint160 sqrtPriceX96 = (TickMath.MAX_SQRT_RATIO + TickMath.MIN_SQRT_RATIO) / 2;        
-        int24 tick = manager.initialize(poolKey, sqrtPriceX96, "");
-        stateTick = tick;
+        manager.initialize(poolKey, sqrtPriceX96, "");
+
     }
 
+    function _addLiquidity() internal{
+
+    }
 
     function test_swap() public {
-               poolKey = PoolKey(
-            Currency.wrap(address(token0)), 
-            Currency.wrap(address(token1)),
-            uint24(100),
-            int24(60),
-            IHooks(hook)
-        );
-        string memory poronga = manager.swap(poolKey);
+        string memory poronga = manager.swap();
         
 
-        assertEq(poronga, "poronga");   
-
-
+        assertEq(poronga, "poronga");
 
         
     }
@@ -104,7 +112,7 @@ contract PoolDeployment is Test {
 
 //     IExtendedPoolManager poolmanager;
     
-//     AdaptivePoolHook adaptivePoolHook = AdaptivePoolHook(address(uint160(Hooks.AFTER_SWAP_FLAG)));
+//     AdaptativePoolHook adaptativePoolHook = AdaptativePoolHook(address(uint160(Hooks.AFTER_SWAP_FLAG)));
 //     PoolKey poolKey;
 //     PoolId poolId;
 
@@ -144,7 +152,7 @@ contract PoolDeployment is Test {
         //     // Ticks that involve positions must be a multiple of tick spacing
         //     int24(60),
         //     // The hooks of the pool
-        //     IHooks(address(adaptivePoolHook))
+        //     IHooks(address(adaptativePoolHook))
         // );
 
         // poolId = poolKey.toId();
@@ -162,8 +170,8 @@ contract PoolDeployment is Test {
 
     //     poolmanager = new ExtendedPoolManager(500000);
 
-    //     // adaptivePoolHook = new AdaptivePoolHook(poolmanager,50,3600,100,100_00,1_000,100,25);
-    //     adaptivePoolHook = new AdaptivePoolHook(poolmanager,50,3600,100,100_00,1_000,100,25);
+    //     // adaptativePoolHook = new AdaptativePoolHook(poolmanager,50,3600,100,100_00,1_000,100,25);
+    //     adaptativePoolHook = new AdaptativePoolHook(poolmanager,50,3600,100,100_00,1_000,100,25);
 
 
     //     if (token0 > token1){
@@ -174,7 +182,7 @@ contract PoolDeployment is Test {
     //         Currency.wrap(address(token1)),
     //         uint24(100), // fee
     //         int24(60),
-    //         IHooks(address(adaptivePoolHook))
+    //         IHooks(address(adaptativePoolHook))
     //     );
 
     //     poolId = poolKey.toId();
@@ -187,7 +195,7 @@ contract PoolDeployment is Test {
 
     // function _setupHook() internal{
     //     // HOOK creation
-    //    adaptivePoolHook = new AdaptivePoolHook (
+    //    adaptativePoolHook = new AdaptativePoolHook (
     //         // Pool Manager Contract
     //         poolmanager,
     //         // epochsToTrack
