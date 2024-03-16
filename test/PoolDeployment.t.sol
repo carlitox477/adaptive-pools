@@ -32,13 +32,16 @@ contract PoolDeployment is Test {
         poolmanager = new PoolManager(123);
     }
 
+
     function test_token() public view {
         assertEq(token0.totalSupply(), 1000000 * 10**18);
     }
 
+
     function test_PoolManagerDeployed() public {
         poolmanager.MAX_TICK_SPACING();
     }
+
 
     function test_InitializePool() public {
 
@@ -66,6 +69,11 @@ contract PoolDeployment is Test {
         
 
         poolmanager.initialize(key, sqrtPriceX96, "");
+    }
+
+
+    function test_HookCall() public {
+        
     }
 
 
