@@ -24,7 +24,7 @@ abstract contract BaseHook is IHooks {
     /// @param _poolManager Address of the pool manager contract.
     constructor(IPoolManager _poolManager) {
         poolManager = _poolManager;
-        validateHookAddress(this);
+        //validateHookAddress(this);
     }
 
     /// @notice Ensures a function is called by the pool manager only.

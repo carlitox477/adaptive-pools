@@ -6,6 +6,8 @@ import "v4-core/types/PoolId.sol";
 import "v4-core/types/PoolKey.sol";
 import "v4-core/types/BalanceDelta.sol";
 import "v4-core/interfaces/IPoolManager.sol";
+import "./interfaces/IExtendedPoolManager.sol";
+
 import "v4-core/libraries/Pool.sol";
 import "v4-core/libraries/Hooks.sol";
 // import "v4-core/PoolManager.sol";
@@ -15,7 +17,6 @@ error UnsafeCasting();
 contract AdaptativePoolHook is BaseHook {
     using PoolIdLibrary for PoolKey;
 
-
     uint24 constant ONE_HUNDREAD_PERCENT = 100;
     uint24 immutable AVG_LIQUIDITY_VOLUME_THESHOLD_PERCENT;
     uint24 immutable EPOCHS_TO_TRACK;
@@ -24,8 +25,9 @@ contract AdaptativePoolHook is BaseHook {
     uint24 immutable MAX_FEE;
     uint24 immutable NORMAL_FEE;
     uint24 immutable EPOCH_DELTA_FEE;
-    PoolId immutable POOL_ID;
+    bool initialized;
     
+    PoolId POOL_ID;
     PoolKey poolKey;
     
     uint128 finalizedEpochs;
@@ -47,9 +49,8 @@ contract AdaptativePoolHook is BaseHook {
         uint24 maxFee,
         uint24 normalFee,
         uint24 epochDeltaFee,
-        uint24 avgLiquidityVolumeThreshold,
-        PoolKey memory _poolKey
-    ) BaseHook(_poolManager){
+        uint24 avgLiquidityVolumeThreshold
+    ) BaseHook(_poolManager) {
         require(epochDuration != 0);
         require(minFee < maxFee);
         require(normalFee < maxFee);
@@ -69,9 +70,41 @@ contract AdaptativePoolHook is BaseHook {
         EPOCH_DELTA_FEE = epochDeltaFee;
         AVG_LIQUIDITY_VOLUME_THESHOLD_PERCENT = avgLiquidityVolumeThreshold;
         lastEpochsVolume = new uint256[](epochsToTrack);
+    }
+
+    function beforeInitialize(
+        address,
+        PoolKey calldata,
+        uint160,
+        bytes calldata
+    ) 
+        external
+        poolManagerOnly()
+        override
+        returns (bytes4) 
+    {
+        require(!initialized);
+        return BaseHook.beforeInitialize.selector;
+    }
+
+    // only once
+    function afterInitialize(
+        address,
+        PoolKey calldata _poolKey,
+        uint160,
+        int24,
+        bytes calldata
+    )
+        external
+        poolManagerOnly()
+        override
+        returns (bytes4)
+    {
+        require(!initialized);
         poolKey = _poolKey;
         POOL_ID = _poolKey.toId();
-
+        initialized = true;
+        return BaseHook.afterInitialize.selector;
     }
 
     function beforeSwap(
@@ -154,8 +187,8 @@ contract AdaptativePoolHook is BaseHook {
         uint256 feeGrowthPerLiquityUnit0,
         uint256 feeGrowthPerLiquityUnit1
     ){
-        feeGrowthPerLiquityUnit0 = poolManager.getPoolFeeGrowth(POOL_ID, true);
-        feeGrowthPerLiquityUnit1 = poolManager.getPoolFeeGrowth(POOL_ID, false);
+        feeGrowthPerLiquityUnit0 = IExtendedPoolManager(address(poolManager)).getPoolFeeGrowth(POOL_ID, true);
+        feeGrowthPerLiquityUnit1 = IExtendedPoolManager(address(poolManager)).getPoolFeeGrowth(POOL_ID, false);
 
     }
 
@@ -203,7 +236,7 @@ contract AdaptativePoolHook is BaseHook {
     }
     */
 
-
+    error FUUUUUUUUCK();
     function afterSwap(
         address, 
         PoolKey calldata, 
@@ -217,26 +250,28 @@ contract AdaptativePoolHook is BaseHook {
         returns (bytes4)
     {
     
-        // Update current liquidity volume
-        (uint256 _feeGrowthAfterSwap0X128,uint256 _feeGrowthAfterSwap1X128) = _getFeeGrowth();
+        revert FUUUUUUUUCK();
 
-        // swapParams.amountSpecified > 0 --> user is specifying amountIn, easy to calculate
-        if(amountsDelta.amount0() > 0){
-            uint256 feeGrowthInSwap0 = _feeGrowthAfterSwap0X128 - _feeGrowthBeforeSwap0X128;
-            currentEpochLiquidityVolume += _calculateLiquidityUtilized(
-                uint256(uint128(amountsDelta.amount0())),
-                18, // modify decimals
-                feeGrowthInSwap0
-            );
+        // // Update current liquidity volume
+        // (uint256 _feeGrowthAfterSwap0X128,uint256 _feeGrowthAfterSwap1X128) = _getFeeGrowth();
 
-        }else if(amountsDelta.amount1() > 0){
-            uint256 feeGrowthInSwap1 = _feeGrowthAfterSwap1X128 - _feeGrowthBeforeSwap1X128;
-            currentEpochLiquidityVolume += _calculateLiquidityUtilized(
-                uint256(uint128(amountsDelta.amount1())),
-                18, // modify decimals
-                feeGrowthInSwap1
-            );
-        }
+        // // swapParams.amountSpecified > 0 --> user is specifying amountIn, easy to calculate
+        // if(amountsDelta.amount0() > 0){
+        //     uint256 feeGrowthInSwap0 = _feeGrowthAfterSwap0X128 - _feeGrowthBeforeSwap0X128;
+        //     currentEpochLiquidityVolume += _calculateLiquidityUtilized(
+        //         uint256(uint128(amountsDelta.amount0())),
+        //         18, // modify decimals
+        //         feeGrowthInSwap0
+        //     );
+
+        // }else if(amountsDelta.amount1() > 0){
+        //     uint256 feeGrowthInSwap1 = _feeGrowthAfterSwap1X128 - _feeGrowthBeforeSwap1X128;
+        //     currentEpochLiquidityVolume += _calculateLiquidityUtilized(
+        //         uint256(uint128(amountsDelta.amount1())),
+        //         18, // modify decimals
+        //         feeGrowthInSwap1
+        //     );
+        // }
     }
 
     function _calculateLiquidityUtilized(
@@ -249,8 +284,21 @@ contract AdaptativePoolHook is BaseHook {
     }
 
 
-    // fee amount gathered
-    // fee perLiquidityAmountBeforeSwap
-    function getHookPermissions() public pure override returns (Hooks.Permissions memory hp){}
+    function getHookPermissions() public pure override returns (Hooks.Permissions memory hp){
+        return Hooks.Permissions(
+            true, // beforeInitialize TRUE
+            true, // afterInitialize true
+            false, // beforeAddLiquidity
+            false, // afterAddLiquidity
+            false, // beforeRemoveLiquidity
+            false, // afterRemoveLiquidity
+            true, // beforeSwap true
+            true, // afterSwap true
+            false, // beforeDonate
+            false // afterDonate
+        );
+    }
+
+
 }
 
