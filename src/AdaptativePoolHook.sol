@@ -50,7 +50,7 @@ contract AdaptativePoolHook is BaseHook {
         uint24 normalFee,
         uint24 epochDeltaFee,
         uint24 avgLiquidityVolumeThreshold
-    ) BaseHook(_poolManager){
+    ) BaseHook(_poolManager) {
         require(epochDuration != 0);
         require(minFee < maxFee);
         require(normalFee < maxFee);
@@ -280,8 +280,21 @@ contract AdaptativePoolHook is BaseHook {
     }
 
 
-    // fee amount gathered
-    // fee perLiquidityAmountBeforeSwap
-    function getHookPermissions() public pure override returns (Hooks.Permissions memory hp){}
+    function getHookPermissions() public pure override returns (Hooks.Permissions memory hp){
+        return Hooks.Permissions(
+            false, // beforeInitialize
+            true, // afterInitialize
+            false, // beforeAddLiquidity
+            false, // afterAddLiquidity
+            false, // beforeRemoveLiquidity
+            false, // afterRemoveLiquidity
+            true, // beforeSwap
+            true, // afterSwap
+            false, // beforeDonate
+            false // afterDonate
+        );
+    }
+
+
 }
 

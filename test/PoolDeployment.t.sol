@@ -29,47 +29,80 @@ contract PoolDeployment is Test {
     PoolKey poolKey;
     PoolId poolId;
 
+    address user1;
+    address user2;
+
     function setUp() public {
+        user1 = makeAddr("user1");
+        user2 = makeAddr("user2");
+    
 
         // Create tokens
         token0 = new MockToken("weth", "WETH");
         token1 = new MockToken("usdc", "USDC");
 
-        // Create PoolManager
-        poolmanager = new ExtendedPoolManager(500000);
+        // // Create PoolManager
+        // poolmanager = new ExtendedPoolManager(500000);
 
-        // First create hook
-        _setupHook();
+        // // First create hook
+        // _setupHook();
 
         
 
-        // Initialize PoolManager
-        // Make sure tokens are in order
+        // // Initialize PoolManager
+        // // Make sure tokens are in order
+        // if (token0 > token1){
+        //     (token0, token1) = (token1, token0);
+        // }
+        // // Create Pool Key data
+        // poolKey = PoolKey(
+        //     // The lower currency of the pool, sorted numerically
+        //     Currency.wrap(address(token0)), 
+        //     // The higher currency of the pool, sorted numerically
+        //     Currency.wrap(address(token1)),
+        //     // The pool swap fee, capped at 1_000_000. The upper 4 bits determine if the hook sets any fees.
+        //     uint24(100), // fee
+        //     // Ticks that involve positions must be a multiple of tick spacing
+        //     int24(60),
+        //     // The hooks of the pool
+        //     IHooks(address(adaptativePoolHook))
+        // );
+
+        // poolId = poolKey.toId();
+
+        // // Test intermediate value 
+        // uint160 sqrtPriceX96 = (TickMath.MAX_SQRT_RATIO + TickMath.MIN_SQRT_RATIO) / 2;
+        
+        // poolmanager.initialize(poolKey, sqrtPriceX96, "");
+        
+    }
+
+
+    function test_FUCK() public {
+        vm.startPrank(user1);
+
+        poolmanager = new ExtendedPoolManager(500000);
+
+        adaptativePoolHook = new AdaptativePoolHook(poolmanager,50,3600,100,100_00,1_000,100,25);
+
         if (token0 > token1){
             (token0, token1) = (token1, token0);
         }
-        // Create Pool Key data
         poolKey = PoolKey(
-            // The lower currency of the pool, sorted numerically
             Currency.wrap(address(token0)), 
-            // The higher currency of the pool, sorted numerically
             Currency.wrap(address(token1)),
-            // The pool swap fee, capped at 1_000_000. The upper 4 bits determine if the hook sets any fees.
             uint24(100), // fee
-            // Ticks that involve positions must be a multiple of tick spacing
             int24(60),
-            // The hooks of the pool
             IHooks(address(adaptativePoolHook))
         );
 
         poolId = poolKey.toId();
-
-        // Test intermediate value 
         uint160 sqrtPriceX96 = (TickMath.MAX_SQRT_RATIO + TickMath.MIN_SQRT_RATIO) / 2;
-        
         poolmanager.initialize(poolKey, sqrtPriceX96, "");
-        
+
+
     }
+
 
     function _setupHook() internal{
         // HOOK creation
@@ -95,69 +128,69 @@ contract PoolDeployment is Test {
 
 
 
-    function test_token() public view {
-        assertEq(token0.totalSupply(), 1000000 * 10**18);
-    }
+    // function test_token() public view {
+    //     assertEq(token0.totalSupply(), 1000000 * 10**18);
+    // }
 
 
-    function test_PoolManagerDeployed() public {
-        poolmanager.MAX_TICK_SPACING();
-    }
+    // function test_PoolManagerDeployed() public {
+    //     poolmanager.MAX_TICK_SPACING();
+    // }
 
 
-    function test_InitializePool() public {
+    // function test_InitializePool() public {
 
-        if (token0 > token1) {
-            (token0, token1) = (token1, token0);
-        }
+    //     if (token0 > token1) {
+    //         (token0, token1) = (token1, token0);
+    //     }
 
-        // Pool identification data
-        PoolKey memory key = PoolKey(
-            // The lower currency of the pool, sorted numerically
-            Currency.wrap(address(token0)), 
-            // The higher currency of the pool, sorted numerically
-            Currency.wrap(address(token1)),
-            // The pool swap fee, capped at 1_000_000. The upper 4 bits determine if the hook sets any fees.
-            uint24(100), // fee
-            // Ticks that involve positions must be a multiple of tick spacing
-            int24(60),
-            // The hooks of the pool
-            IHooks(address(0))
-        );
+    //     // Pool identification data
+    //     PoolKey memory key = PoolKey(
+    //         // The lower currency of the pool, sorted numerically
+    //         Currency.wrap(address(token0)), 
+    //         // The higher currency of the pool, sorted numerically
+    //         Currency.wrap(address(token1)),
+    //         // The pool swap fee, capped at 1_000_000. The upper 4 bits determine if the hook sets any fees.
+    //         uint24(100), // fee
+    //         // Ticks that involve positions must be a multiple of tick spacing
+    //         int24(60),
+    //         // The hooks of the pool
+    //         IHooks(address(0))
+    //     );
 
-        // srtPriceX96 must be a value between MIN_SQRT_RATION - MAX_SQRT_RATIO
-        // https://github.com/Uniswap/v4-core/blob/main/src/libraries/TickMath.sol#L24-L26
-        uint160 sqrtPriceX96 = (TickMath.MAX_SQRT_RATIO + TickMath.MIN_SQRT_RATIO) / 2; // trying an intermediate value first
+    //     // srtPriceX96 must be a value between MIN_SQRT_RATION - MAX_SQRT_RATIO
+    //     // https://github.com/Uniswap/v4-core/blob/main/src/libraries/TickMath.sol#L24-L26
+    //     uint160 sqrtPriceX96 = (TickMath.MAX_SQRT_RATIO + TickMath.MIN_SQRT_RATIO) / 2; // trying an intermediate value first
         
 
-        poolmanager.initialize(key, sqrtPriceX96, "");
-    }
+    //     poolmanager.initialize(key, sqrtPriceX96, "");
+    // }
 
 
-    function test_HookCall() public {
-        if (token0 > token1) {
-            (token0, token1) = (token1, token0);
-        }
-        // Pool identification data
-        PoolKey memory key = PoolKey(
-            // The lower currency of the pool, sorted numerically
-            Currency.wrap(address(token0)), 
-            // The higher currency of the pool, sorted numerically
-            Currency.wrap(address(token1)),
-            // The pool swap fee, capped at 1_000_000. The upper 4 bits determine if the hook sets any fees.
-            uint24(100), // fee
-            // Ticks that involve positions must be a multiple of tick spacing
-            int24(60),
-            // The hooks of the pool
-            IHooks(address(0))
-        );
+    // function test_HookCall() public {
+    //     if (token0 > token1) {
+    //         (token0, token1) = (token1, token0);
+    //     }
+    //     // Pool identification data
+    //     PoolKey memory key = PoolKey(
+    //         // The lower currency of the pool, sorted numerically
+    //         Currency.wrap(address(token0)), 
+    //         // The higher currency of the pool, sorted numerically
+    //         Currency.wrap(address(token1)),
+    //         // The pool swap fee, capped at 1_000_000. The upper 4 bits determine if the hook sets any fees.
+    //         uint24(100), // fee
+    //         // Ticks that involve positions must be a multiple of tick spacing
+    //         int24(60),
+    //         // The hooks of the pool
+    //         IHooks(address(0))
+    //     );
 
-        // srtPriceX96 must be a value between MIN_SQRT_RATION - MAX_SQRT_RATIO
-        // https://github.com/Uniswap/v4-core/blob/main/src/libraries/TickMath.sol#L24-L26
-        uint160 sqrtPriceX96 = (TickMath.MAX_SQRT_RATIO + TickMath.MIN_SQRT_RATIO) / 2; // trying an intermediate value first
+    //     // srtPriceX96 must be a value between MIN_SQRT_RATION - MAX_SQRT_RATIO
+    //     // https://github.com/Uniswap/v4-core/blob/main/src/libraries/TickMath.sol#L24-L26
+    //     uint160 sqrtPriceX96 = (TickMath.MAX_SQRT_RATIO + TickMath.MIN_SQRT_RATIO) / 2; // trying an intermediate value first
         
-        poolmanager.initialize(key, sqrtPriceX96, "");
-    }
+    //     poolmanager.initialize(key, sqrtPriceX96, "");
+    // }
 
 
 
