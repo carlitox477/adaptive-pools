@@ -51,6 +51,10 @@ abstract contract BaseHook is IHooks {
     function getHookPermissions() public pure virtual returns (Hooks.Permissions memory);
 
     /// @dev Validates the hook address by checking its permissions.
+    ///
+    /// this function is virtual so that we can override it during testing,
+    /// which allows us to deploy an implementation to any address
+    /// and then etch the bytecode into the correct address
     /// @param _this The instance of the BaseHook being validated.
     function validateHookAddress(BaseHook _this) internal pure virtual {
         Hooks.validateHookPermissions(_this, getHookPermissions());
@@ -63,6 +67,8 @@ abstract contract BaseHook is IHooks {
         (bool success, bytes memory returnData) = address(this).call(data);
         if (success) return returnData;
         if (returnData.length == 0) revert LockFailure();
+        // if the call failed, bubble up the reason
+        /// @solidity memory-safe-assembly
         assembly {
             revert(add(returnData, 32), mload(returnData))
         }
