@@ -15,6 +15,9 @@ import "v4-core/types/PoolKey.sol";
 import "v4-core/libraries/TickMath.sol";
 import "v4-core/types/PoolKey.sol";
 
+// Periphery
+//import "v4-periphery/BaseHook.sol";
+
 
 contract PoolDeployment is Test {
 
@@ -39,26 +42,30 @@ contract PoolDeployment is Test {
 
     function test_InitializePool() public {
 
-        PoolKey memory poolkey = PoolKey(
+        if (token0 > token1) {
+            (token0, token1) = (token1, token0);
+        }
+
+        // Pool identification data
+        PoolKey memory key = PoolKey(
             // The lower currency of the pool, sorted numerically
-            Currency.wrap(token0), 
+            Currency.wrap(address(token0)), 
             // The higher currency of the pool, sorted numerically
-            Currency.wrap(token1),
+            Currency.wrap(address(token1)),
             // The pool swap fee, capped at 1_000_000. The upper 4 bits determine if the hook sets any fees.
             uint24(100), // fee
             // Ticks that involve positions must be a multiple of tick spacing
-            int24(2),
+            int24(60),
             // The hooks of the pool
-            IHooks();
-            )
+            IHooks(address(0))
+        );
 
         // srtPriceX96 must be a value between MIN_SQRT_RATION - MAX_SQRT_RATIO
         // https://github.com/Uniswap/v4-core/blob/main/src/libraries/TickMath.sol#L24-L26
         uint160 sqrtPriceX96 = (TickMath.MAX_SQRT_RATIO + TickMath.MIN_SQRT_RATIO) / 2; // trying an intermediate value first
         
 
-
-        //poolmanager.initialize(key, sqrtPriceX96, hookData);
+        poolmanager.initialize(key, sqrtPriceX96, "");
     }
 
 
@@ -66,8 +73,8 @@ contract PoolDeployment is Test {
 }
 
 
-contract TestHook {
+contract TestHook  {
 
-
+    string name = "HONEYBOOBOO";
 
 }
