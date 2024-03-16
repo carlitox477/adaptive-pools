@@ -93,57 +93,7 @@ contract PoolDeployment is Test {
        );
     }
 
-/*
-    function test_hookdeploy() public {
 
-        // Pool Key Initialization
-        if (token0 > token1) {
-            (token0, token1) = (token1, token0);
-        }
-        // Pool identification data
-        PoolKey memory key = PoolKey(
-            // The lower currency of the pool, sorted numerically
-            Currency.wrap(address(token0)), 
-            // The higher currency of the pool, sorted numerically
-            Currency.wrap(address(token1)),
-            // The pool swap fee, capped at 1_000_000. The upper 4 bits determine if the hook sets any fees.
-            uint24(100), // fee
-            // Ticks that involve positions must be a multiple of tick spacing
-            int24(60),
-            // The hooks of the pool
-            IHooks(address(0))
-        );
-
-
-        uint160 sqrtPriceX96 = (TickMath.MAX_SQRT_RATIO + TickMath.MIN_SQRT_RATIO) / 2; // trying an intermediate value first
-        // this reuturns a Pool id
-        poolmanager.initialize(key, sqrtPriceX96, "");
-
-
-        // HOOK Initialization
-       AdaptativePoolHook hooker;
-       hooker = new AdaptativePoolHook (
-        // Pool Manager Contract
-        poolmanager,
-        // epochsToTrack
-        50,
-        // epochDuration (1h in seconds)
-        3600,
-        // minFee
-        100,
-        // maxFee
-        100_00,
-        // normalFee
-        1_000,
-        //epochDeltaFee
-        100,
-        // avgLiquidityVolumeThreshold
-        25,
-        // PoolKey memory _poolKey
-        key
-       );
-    }
-*/
 
     function test_token() public view {
         assertEq(token0.totalSupply(), 1000000 * 10**18);
@@ -214,8 +164,3 @@ contract PoolDeployment is Test {
 }
 
 
-contract TestHook {
-
-    string name = "HONEYBOOBOO";
-
-}
