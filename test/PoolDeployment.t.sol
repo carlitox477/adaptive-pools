@@ -18,28 +18,95 @@ import "src/AdaptativePoolHook.sol";
 
 
 
+contract Implementation is AdaptativePoolHook {
+
+    constructor(IPoolManager _poolManager, AdaptativePoolHook addressToEtch) AdaptativePoolHook(poolManager,50,3600,100,100_00,1_000,100,25){
+        Hooks.isValidHookAddress(addressToEtch, 24);
+    }
+
+}
+
+
+
 contract PoolDeployment is Test {
-    using PoolIdLibrary for PoolKey;
-    ERC20 token0;
-    ERC20 token1;
 
-    IExtendedPoolManager poolmanager;
-    
-    AdaptativePoolHook adaptativePoolHook;
+    AdaptativePoolHook hook = AdaptativePoolHook(address(uint160(Hooks.AFTER_SWAP_FLAG)));
+    PoolManager manager;
     PoolKey poolKey;
-    PoolId poolId;
 
-    address user1;
-    address user2;
+    IERC20 token0;
+    IERC20 token1;
+
 
     function setUp() public {
-        user1 = makeAddr("user1");
-        user2 = makeAddr("user2");
-    
-
-        // Create tokens
         token0 = new MockToken("weth", "WETH");
         token1 = new MockToken("usdc", "USDC");
+
+        manager = new PoolManager(500000);
+
+        Implementation impl = new Implementation(manager, hook);
+        (, bytes32[] memory writes) = vm.accesses(address(impl));
+        vm.etch(address(hook), address(impl).code);
+
+        unchecked {
+            for (uint256 i = 0; i < writes.length; i++) {
+                bytes32 slot = writes[i];
+                vm.store(address(hook), slot, vm.load(address(impl), slot));
+            }
+        }
+
+
+        if (token0 > token1){(token0, token1) = (token1, token0);}
+        
+        poolKey = PoolKey(
+            Currency.wrap(address(token0)), 
+            Currency.wrap(address(token1)),
+            uint24(100),
+            int24(60),
+            IHooks(hook)
+        );
+
+        //PoolId poolId = PoolId.wrap(keccak256(abi.encode(poolKey)));
+        uint160 sqrtPriceX96 = (TickMath.MAX_SQRT_RATIO + TickMath.MIN_SQRT_RATIO) / 2;        
+        manager.initialize(poolKey, sqrtPriceX96, "");
+
+    }
+
+
+    function test_swap() public {
+        string memory poronga = manager.swap();
+        assertEq(poronga, "poronga");
+
+    }
+
+}
+
+
+
+
+
+// contract PoolDeployment is Test {
+//     using PoolIdLibrary for PoolKey;
+//     ERC20 token0;
+//     ERC20 token1;
+
+//     IExtendedPoolManager poolmanager;
+    
+//     AdaptativePoolHook adaptativePoolHook = AdaptativePoolHook(address(uint160(Hooks.AFTER_SWAP_FLAG)));
+//     PoolKey poolKey;
+//     PoolId poolId;
+
+//     address user1;
+//     address user2;
+
+//     function setUp() public {
+//         user1 = makeAddr("user1");
+//         user2 = makeAddr("user2");
+    
+
+//         // Create tokens
+//         token0 = new MockToken("weth", "WETH");
+//         token1 = new MockToken("usdc", "USDC");
 
         // // Create PoolManager
         // poolmanager = new ExtendedPoolManager(500000);
@@ -75,56 +142,58 @@ contract PoolDeployment is Test {
         
         // poolmanager.initialize(poolKey, sqrtPriceX96, "");
         
-    }
+//    }
 
 
-    function test_FUCK() public {
-        vm.startPrank(user1);
+    // function test_FUCK() public {
+    //     vm.startPrank(user1);
 
-        poolmanager = new ExtendedPoolManager(500000);
+    //     poolmanager = new ExtendedPoolManager(500000);
 
-        adaptativePoolHook = new AdaptativePoolHook(poolmanager,50,3600,100,100_00,1_000,100,25);
-
-        if (token0 > token1){
-            (token0, token1) = (token1, token0);
-        }
-        poolKey = PoolKey(
-            Currency.wrap(address(token0)), 
-            Currency.wrap(address(token1)),
-            uint24(100), // fee
-            int24(60),
-            IHooks(address(adaptativePoolHook))
-        );
-
-        poolId = poolKey.toId();
-        uint160 sqrtPriceX96 = (TickMath.MAX_SQRT_RATIO + TickMath.MIN_SQRT_RATIO) / 2;
-        poolmanager.initialize(poolKey, sqrtPriceX96, "");
+    //     // adaptativePoolHook = new AdaptativePoolHook(poolmanager,50,3600,100,100_00,1_000,100,25);
+    //     adaptativePoolHook = new AdaptativePoolHook(poolmanager,50,3600,100,100_00,1_000,100,25);
 
 
-    }
+    //     if (token0 > token1){
+    //         (token0, token1) = (token1, token0);
+    //     }
+    //     poolKey = PoolKey(
+    //         Currency.wrap(address(token0)), 
+    //         Currency.wrap(address(token1)),
+    //         uint24(100), // fee
+    //         int24(60),
+    //         IHooks(address(adaptativePoolHook))
+    //     );
+
+    //     poolId = poolKey.toId();
+    //     uint160 sqrtPriceX96 = (TickMath.MAX_SQRT_RATIO + TickMath.MIN_SQRT_RATIO) / 2;
+    //     poolmanager.initialize(poolKey, sqrtPriceX96, "");
 
 
-    function _setupHook() internal{
-        // HOOK creation
-       adaptativePoolHook = new AdaptativePoolHook (
-            // Pool Manager Contract
-            poolmanager,
-            // epochsToTrack
-            50,
-            // epochDuration (1h in seconds)
-            3600,
-            // minFee
-            100,
-            // maxFee
-            100_00,
-            // normalFee
-            1_000,
-            //epochDeltaFee
-            100,
-            // avgLiquidityVolumeThreshold
-            25
-       );
-    }
+    // }
+
+
+    // function _setupHook() internal{
+    //     // HOOK creation
+    //    adaptativePoolHook = new AdaptativePoolHook (
+    //         // Pool Manager Contract
+    //         poolmanager,
+    //         // epochsToTrack
+    //         50,
+    //         // epochDuration (1h in seconds)
+    //         3600,
+    //         // minFee
+    //         100,
+    //         // maxFee
+    //         100_00,
+    //         // normalFee
+    //         1_000,
+    //         //epochDeltaFee
+    //         100,
+    //         // avgLiquidityVolumeThreshold
+    //         25
+    //    );
+    // }
 
 
 
@@ -194,6 +263,6 @@ contract PoolDeployment is Test {
 
 
 
-}
+//}
 
 
