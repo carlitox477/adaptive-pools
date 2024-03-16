@@ -19,13 +19,13 @@ contract PoolDeployment is Test {
 
     ERC20 token0;
     ERC20 token1;
-    PoolManager pool;
+    PoolManager poolmanager;
 
     function setUp() public {
         token0 = new MockToken("weth", "WETH");
         token1 = new MockToken("usdc", "USDC");
 
-        pool = new PoolManager(123);
+        poolmanager = new PoolManager(123);
     }
 
     function test_token() public view {
@@ -33,8 +33,9 @@ contract PoolDeployment is Test {
     }
 
     function test_PoolDeployed() public {
-        pool.MAX_TICK_SPACING();
+        poolmanager.MAX_TICK_SPACING();
     }
+
 
 
 
