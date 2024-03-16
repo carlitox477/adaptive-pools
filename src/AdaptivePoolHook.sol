@@ -14,7 +14,7 @@ import "v4-core/libraries/Hooks.sol";
 
 error UnsafeCasting();
 
-contract AdaptivePoolHook is BaseHook {
+contract AdaptativePoolHook is BaseHook {
     using PoolIdLibrary for PoolKey;
 
     uint24 constant ONE_HUNDREAD_PERCENT = 100;
@@ -71,7 +71,7 @@ contract AdaptivePoolHook is BaseHook {
         AVG_LIQUIDITY_VOLUME_THESHOLD_PERCENT = avgLiquidityVolumeThreshold;
         lastEpochsVolume = new uint256[](epochsToTrack);
     }
-event LFG();
+
     function beforeInitialize(
         address,
         PoolKey calldata,
@@ -84,7 +84,7 @@ event LFG();
         returns (bytes4) 
     {
         require(!initialized);
-        emit LFG();
+        return BaseHook.beforeInitialize.selector;
     }
 
     // only once
@@ -104,6 +104,7 @@ event LFG();
         poolKey = _poolKey;
         POOL_ID = _poolKey.toId();
         initialized = true;
+        return BaseHook.afterInitialize.selector;
     }
 
     function beforeSwap(
@@ -236,7 +237,6 @@ event LFG();
     */
 
     error FUUUUUUUUCK();
-    
     function afterSwap(
         address, 
         PoolKey calldata, 
@@ -245,21 +245,7 @@ event LFG();
         bytes calldata
         )
         external
-        // override
-        poolManagerOnly()
-        returns (bytes4)
-    {
-        revert FUUUUUUUUCK();
-    }
-    function afterSwap(
-        // address, 
-        // PoolKey calldata, 
-        // IPoolManager.SwapParams calldata,
-        // BalanceDelta amountsDelta, // the one positive represent tokens added swapped in
-        // bytes calldata
-        )
-        external
-        // override
+        override
         poolManagerOnly()
         returns (bytes4)
     {
@@ -300,13 +286,13 @@ event LFG();
 
     function getHookPermissions() public pure override returns (Hooks.Permissions memory hp){
         return Hooks.Permissions(
-            false, // beforeInitialize
-            false, // afterInitialize true
+            true, // beforeInitialize TRUE
+            true, // afterInitialize true
             false, // beforeAddLiquidity
             false, // afterAddLiquidity
             false, // beforeRemoveLiquidity
             false, // afterRemoveLiquidity
-            false, // beforeSwap true
+            true, // beforeSwap true
             true, // afterSwap true
             false, // beforeDonate
             false // afterDonate
