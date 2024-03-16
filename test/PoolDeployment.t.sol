@@ -15,6 +15,7 @@ import "v4-core/types/PoolKey.sol";
 import "v4-core/libraries/TickMath.sol";
 import "v4-core/types/PoolId.sol";
 import "src/AdaptativePoolHook.sol";
+import "v4-core/libraries/Pool.sol";
 
 
 address constant HOOK_DEPLOYMENT_ADDRESS = address(uint160(
@@ -46,6 +47,7 @@ contract PoolDeployment is Test {
     AdaptativePoolHook hook = AdaptativePoolHook(HOOK_DEPLOYMENT_ADDRESS);
     PoolManager manager;
     PoolKey poolKey;
+    // Pool.SwapParams swapParameters;
 
     IERC20 token0;
     IERC20 token1;
@@ -69,7 +71,7 @@ contract PoolDeployment is Test {
             }
         }
 
-
+        // Order tokens
         if (token0 > token1){(token0, token1) = (token1, token0);}
         
         poolKey = PoolKey(
@@ -86,18 +88,47 @@ contract PoolDeployment is Test {
 
     }
 
-    function _addLiquidity() internal{
-
-    }
 
     function test_swap() public {
-        string memory poronga = manager.swap();
-        
-
-        assertEq(poronga, "poronga");
-
-        
+        string memory imbatman = manager.swaptest();
+        assertEq(imbatman, "imbatman");
     }
+
+
+    function test_addLiquidity() public {
+        // liquidity providers can provide liquidity at specific price ranges (ticks), 
+        // allowing them to concentrate their liquidity and potentially earn more fees.
+        
+        token0.approve(address(manager), type(uint256).max);
+        token1.approve(address(manager), type(uint256).max);
+
+
+        IPoolManager.ModifyLiquidityParams memory liquidityParameters = IPoolManager.ModifyLiquidityParams({
+            tickLower: int24(-600),
+            tickUpper: int24(600),
+            liquidityDelta: int256(1e18)
+        });
+
+        IPoolManager(address(manager)).modifyLiquidity(
+            poolKey,
+            liquidityParameters,
+            ""
+        );
+
+        IPoolManager.SwapParams memory swapParams = IPoolManager.SwapParams({
+            zeroForOne: bool(true),
+            amountSpecified: int256(100),
+            sqrtPriceLimitX96: 100
+        });
+
+        manager.swap(
+            poolKey,
+            swapParams, 
+            ""
+        );
+
+    }
+
 
 }
 
