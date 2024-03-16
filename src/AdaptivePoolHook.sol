@@ -14,7 +14,7 @@ import "v4-core/libraries/Hooks.sol";
 
 error UnsafeCasting();
 
-contract AdaptativePoolHook is BaseHook {
+contract AdaptivePoolHook is BaseHook {
     using PoolIdLibrary for PoolKey;
 
     uint24 constant ONE_HUNDREAD_PERCENT = 100;
@@ -71,7 +71,7 @@ contract AdaptativePoolHook is BaseHook {
         AVG_LIQUIDITY_VOLUME_THESHOLD_PERCENT = avgLiquidityVolumeThreshold;
         lastEpochsVolume = new uint256[](epochsToTrack);
     }
-
+event LFG();
     function beforeInitialize(
         address,
         PoolKey calldata,
@@ -84,6 +84,7 @@ contract AdaptativePoolHook is BaseHook {
         returns (bytes4) 
     {
         require(!initialized);
+        emit LFG();
     }
 
     // only once
@@ -235,6 +236,7 @@ contract AdaptativePoolHook is BaseHook {
     */
 
     error FUUUUUUUUCK();
+    
     function afterSwap(
         address, 
         PoolKey calldata, 
@@ -243,7 +245,21 @@ contract AdaptativePoolHook is BaseHook {
         bytes calldata
         )
         external
-        override
+        // override
+        poolManagerOnly()
+        returns (bytes4)
+    {
+        revert FUUUUUUUUCK();
+    }
+    function afterSwap(
+        // address, 
+        // PoolKey calldata, 
+        // IPoolManager.SwapParams calldata,
+        // BalanceDelta amountsDelta, // the one positive represent tokens added swapped in
+        // bytes calldata
+        )
+        external
+        // override
         poolManagerOnly()
         returns (bytes4)
     {
