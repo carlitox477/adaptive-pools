@@ -14,7 +14,7 @@ import "v4-core/interfaces/IPoolManager.sol";
 import "v4-core/types/PoolKey.sol";
 import "v4-core/libraries/TickMath.sol";
 import "v4-core/types/PoolKey.sol";
-import "src/SuperDynamicFeesHook.sol";
+import "src/AdaptativePoolHook.sol";
 
 
 
@@ -25,7 +25,7 @@ contract PoolDeployment is Test {
 
     IPoolManager poolmanager;
     
-    SuperDynamicFeesHook superdynamicfeeshook;
+    AdaptativePoolHook superdynamicfeeshook;
 
     function setUp() public {
 
@@ -87,8 +87,8 @@ contract PoolDeployment is Test {
 
 
         // HOOK Initialization
-       SuperDynamicFeesHook hooker;
-       hooker = new SuperDynamicFeesHook (
+       AdaptativePoolHook hooker;
+       hooker = new AdaptativePoolHook (
         // Pool Manager Contract
         poolmanager,
         // epochsToTrack
