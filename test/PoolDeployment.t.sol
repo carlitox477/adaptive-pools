@@ -12,7 +12,8 @@ import {Hooks} from "v4-core/libraries/Hooks.sol";
 import {IHooks} from "v4-core/interfaces/IHooks.sol";
 import "v4-core/interfaces/IPoolManager.sol";
 import "v4-core/types/PoolKey.sol";
-
+import "v4-core/libraries/TickMath.sol";
+import "v4-core/types/PoolKey.sol";
 
 
 contract PoolDeployment is Test {
@@ -32,11 +33,40 @@ contract PoolDeployment is Test {
         assertEq(token0.totalSupply(), 1000000 * 10**18);
     }
 
-    function test_PoolDeployed() public {
+    function test_PoolManagerDeployed() public {
         poolmanager.MAX_TICK_SPACING();
     }
 
+    function test_InitializePool() public {
 
+        PoolKey memory poolkey = PoolKey(
+            // The lower currency of the pool, sorted numerically
+            Currency.wrap(token0), 
+            // The higher currency of the pool, sorted numerically
+            Currency.wrap(token1),
+            // The pool swap fee, capped at 1_000_000. The upper 4 bits determine if the hook sets any fees.
+            uint24(100), // fee
+            // Ticks that involve positions must be a multiple of tick spacing
+            int24(2),
+            // The hooks of the pool
+            IHooks();
+            )
+
+        // srtPriceX96 must be a value between MIN_SQRT_RATION - MAX_SQRT_RATIO
+        // https://github.com/Uniswap/v4-core/blob/main/src/libraries/TickMath.sol#L24-L26
+        uint160 sqrtPriceX96 = (TickMath.MAX_SQRT_RATIO + TickMath.MIN_SQRT_RATIO) / 2; // trying an intermediate value first
+        
+
+
+        //poolmanager.initialize(key, sqrtPriceX96, hookData);
+    }
+
+
+
+}
+
+
+contract TestHook {
 
 
 
