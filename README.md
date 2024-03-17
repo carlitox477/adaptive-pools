@@ -1,6 +1,6 @@
 
 # Adaptive Pools
-![AdaptivePools Banner](./img/banner.png)
+![AdaptivePools Banner](./img/Banner_Shorter.png)
 AdaptivePools: *An adaptive implementation of Uniswap V4 Liquidity Pools via hooks*
 
 ## Why AdaptivePools?
