@@ -84,14 +84,13 @@ Additionally, this strategy can be unselected and use a fixed fees strategy with
 It's as simple as filling a few fields asked by our deployment script and there you go!
 - Choose a base fee amount, min range fee and max range fee
 - Choose a pair of tokens
-- Choose an adaptive fee strategy (optional)(wip)
+- Choose an adaptive fee strategy (optional)
 
 ## User interface
 We provide a CLI interface to interact with the code in basic way:
 - Deploy an AdaptivePool in just 2 steps
 - Provide liquidity (this is for tests, you can do it interacting with uniswap v4 as long as they launch)
 - Swap (this is for tests, you can do it interacting with uniswap v4 as long as they launch)
-- Test your gains with adaptive strategy 
 
 ## Foundry
 
