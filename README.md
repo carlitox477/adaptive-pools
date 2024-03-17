@@ -3,6 +3,21 @@
 ![AdaptivePools Banner](./img/Banner_Shorter.png)
 AdaptivePools: *An adaptive implementation of Uniswap V4 Liquidity Pools via hooks*
 
+## Table of Contents
+
+- [Why AdaptivePools?](#why-adaptivepools)
+- [Sounds good, but how?](#sounds-good-but-how)
+- [Okay but, what if in some point we still don't have enough liquidity](#okay-but-what-if-in-some-point-we-still-dont-have-enough-liquidity)
+- [Maths behind](#maths-behind)
+  - [How we do it](#how-we-do-it)
+  - [How do we track volume](#how-do-we-track-volume)
+  - [Authors](#authors)
+- [Strategies](#strategies)
+- [How to deploy your own AdaptivePool in less than 5 minutes 👀](#how-to-deploy-your-own-adaptivepool-in-less-than-5-minutes-)
+- [User interface](#user-interface)
+- [Foundry](#foundry)
+  - [References](#references)
+
 ## Why AdaptivePools?
 Liquidity Pools and AMM are a fundamental part of DeFi, but over time, their initial implementation starts to change to adapt to market needs. 
 
@@ -21,12 +36,43 @@ Additionally, this incentivize huge liquidity, this liquidity provided creates c
 Adaptive Pools adapts themselve to low liquidity situations by using the concept of flash liquidity, for it, by using Uniswap V4 Hooks we take  Morpho Blue pools liquidity, making a seamless and optimal trade  
 
 ## Maths behind
-This strategy works under the following math formula that analyzes last epochs to adapt to the market situation:
-```latex
-##### FORMULA
-```
 
-Here is our [whitepaper](link).
+* $EPOCHS\_ TO\_ TRACK$: We must track liquidity utilized in last $EPOCHS\_ TO\_ TRACK$ epochs to be able to calculate the average utilzed liquidity in these periods
+* $EPOCHS\_ DURATION$: Duration of one epoch in seconds
+* $volumeOfLiquidityUtilized$: Liquidity that has been utilized during current epoch (can be interpreted as volume trade during current epoch)
+* $sumLastEpochLiquidityVolume = \sum_{i = 1}^{|trackedEpochsVolumes|}(trackedEpochsVolumes[i])$
+* $AvgLiquidityUtilized = \frac{SumLastEpochLiquidityVolume}{NumberOfEpochsToTrack}$
+* $AVG\_ VOLUME\_ THRESHOLD$: Percentage of AVG volume transactioned in last $EPOCHS\_ TO\_ TRACK$ that we are going to take into account in order to increase/decrease swap fees
+* $MIN\_FEE$: Min fee percentage that liquidity providers and Uniswap are going to receive in each swap. If volume transactioned during last epoch is
+* $MAX\_ FEE$: Max fee percentage that liquidity providers and Uniswap are going to receive in each swap.
+* $NORMAL\_ FEE$: Normal fee percentage
+* $DELTA\_ FEE$: Percentage that swap fees can increase/decrease in each epoch
+
+### How we do it
+We track a moving average of a value that represents traded volume inside an epoch, and if we desviate enough from this value we are going to increase or decrease fee percentage by $DELTA\_ FEE$ unless current swap fees are the one desired.
+
+The idea is that:
+* If $AvgLiquidityUtilized \times (100\% - AVG\_ VOLUME\_ THRESHOLD) \leq volumeOfLiquidityUtilized \leq  AvgLiquidityUtilized \times (100\% + AVG\_ VOLUME\_ THRESHOLD)$ swap fees should tend to $NORMAL\_ FEE$
+* $volumeOfLiquidityUtilized < AvgLiquidityUtilized \times (100\% - AVG\_ VOLUME\_ THRESHOLD)$ swap fees should tend to $MIN\_ FEE$
+* $volumeOfLiquidityUtilized > AvgLiquidityUtilized \times (100\% - AVG\_ VOLUME\_ THRESHOLD)$ swap fees should tend to $MAX\_ FEE$
+
+
+![Swap fees trend trend](https://i.ibb.co/6m13zGG/Uniswap-dynamic-fees-P-gina-3.png)
+
+### How do we track volume
+We can consider the liquidity utilized for swapping in an epoch as a valid measure of transacted volume without needing to convert values in another unit of measure like USD in each swap. To calculate the liquidity utilize in a swap we can use the amount of tokens swapped in and the global fee growth per liquidity unit of token swapped in to calculate liquidity utilized during a swap in next way
+
+$UtilizedLiquidity_{swap} = \frac{swapIn_{X}}{globalFeeGrowthTokenX_{after \; swap} - globalFeeGrowthTokenX_{before \; swap}}$
+
+Each time we do a swap we can calculate this value in `afterSwapHook` if in `beforeSwapHook` we save $globalFeeGrowthTokenX_{before \; swap}$
+
+Each time we do a swap we must add this value to $volumeOfLiquidityUtilized$
+
+### Authors
+* [carlitox477](https://twitter.com/carlitox477)
+* [Deivitto](https://twitter.com/Deivitto)
+* [Pablo Misirov](https://twitter.com/p_misirov)
+
 
 ## Strategies
 Last sections is the default strategy of AdaptivePools, but different strategies can be later provide after some iterations, as the core infraestructure
@@ -55,7 +101,7 @@ forge build --use bin/solc
 forge test  --use bin/solc
 ```
 
-
-### References
+#### References
+- [Math spec](https://hackmd.io/iHO3hvF9RAqIVAE4bNgxEA?view)
 - [tstore-template](https://github.com/hrkrshnn/tstore-template/tree/master) by hrkrshnn
 
