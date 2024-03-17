@@ -132,15 +132,17 @@ contract AdaptativePoolHook is BaseHook {
             sumLastEpochLiquidityVolume = currentEpochLiquidityVolume;
 
             lastEpochUpdate = uint64(block.timestamp); //
-            currentEpochLiquidityVolume = 0;
-            
+            currentEpochLiquidityVolume = 0;            
         }
 
         lastSwapTimestamp = uint64(block.timestamp);
 
         // Get fee growth to calculate used liquidity in after swap hook
         _recordFeesBeforeSwap();
+
+        return bytes4(keccak256("beforeSwap(address,(address,address,uint24,int24,address),(bool,int256,uint160),bytes)"));
     }
+
 
     function _isNewEpoch() internal view returns(bool){
         return lastEpochUpdate + EPOCH_DURATION < lastSwapTimestamp;
@@ -187,8 +189,9 @@ contract AdaptativePoolHook is BaseHook {
         uint256 feeGrowthPerLiquityUnit0,
         uint256 feeGrowthPerLiquityUnit1
     ){
-        feeGrowthPerLiquityUnit0 = IExtendedPoolManager(address(poolManager)).getPoolFeeGrowth(POOL_ID, true);
-        feeGrowthPerLiquityUnit1 = IExtendedPoolManager(address(poolManager)).getPoolFeeGrowth(POOL_ID, false);
+        // @audit POOL MANAGER HAS NO getPoolGrowth function???
+        // feeGrowthPerLiquityUnit0 = IExtendedPoolManager(address(poolManager)).getPoolFeeGrowth(POOL_ID, true);
+        // feeGrowthPerLiquityUnit1 = IExtendedPoolManager(address(poolManager)).getPoolFeeGrowth(POOL_ID, false);
 
     }
 
