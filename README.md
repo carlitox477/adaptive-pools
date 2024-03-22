@@ -73,6 +73,8 @@ Each time we do a swap we must add this value to $volumeOfLiquidityUtilized$
 * [Deivitto](https://twitter.com/Deivitto)
 * [Pablo Misirov](https://twitter.com/p_misirov)
 
+### Slides
+- https://docs.google.com/presentation/d/1DokPI8LZ3-d-dhV_sWuj_R5zaoTYGPtNbd1bAVkS1qg/edit#slide=id.p
 
 ## Strategies
 Last sections is the default strategy of AdaptivePools, but different strategies can be later provide after some iterations, as the core infraestructure
